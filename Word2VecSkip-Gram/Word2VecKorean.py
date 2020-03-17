@@ -28,5 +28,12 @@ def vectorSubtract(a, b, c):
     result = model.wv.most_similar(positive=[c, b], negative=[a])
     return result[0][0]
 
-modelResult1 = vectorSubtract("자동차", "기계", "나비")
-print(modelResult1)
+modelResult = vectorSubtract("한국", "한국인", "영국")
+print(modelResult)
+
+print()
+
+mostSimilar = model.wv.most_similar("컴퓨터")
+
+for i in range(0, 6):
+    print(mostSimilar[i])
