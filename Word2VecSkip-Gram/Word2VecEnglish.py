@@ -1,10 +1,8 @@
-import re
-from nltk.tokenize import word_tokenize, sent_tokenize
 from gensim.models import Word2Vec
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+from myTokenizer import myTokenizer
 
 model = None
+
 try:
     model = Word2Vec.load('../data/English/word2vec/cnn_w2v')
     print("the word2vec file exists!")
@@ -12,45 +10,16 @@ try:
     tokenizedLoadFile = open("../data/English/tokenized/cnn.txt", "r", encoding="UTF8")
     print("tokenized text exists.")
     cnnPreprocessed = tokenizedLoadFile
+
 except IOError or FileNotFoundError:
     print("the word2vec file does not exist! T.T")
 
     print("tokenized text doesn't exist.")
-    file = open("../data/English/raw/cnn/all.txt", "r", encoding='UTF8')
-    tokenizedSaveFile = open("../data/English/tokenized/cnn.txt", "w", encoding="UTF8")
+    originalCorpus = "../data/English/raw/cnn/all.txt"
+    tokenizedCorpus = "../data/English/tokenized/cnn.txt"
 
-    cnnPreprocessed = []
-    lemmatizer = WordNetLemmatizer()
-    stopWords = stopwords.words("english")
-    while True:
-        line = file.readline()
-        if len(line) == 0:
-            print("File read finished")
-            break
-        cnnSentTokenized = sent_tokenize(line)
-        # 문장별로 끊음
-
-        for sent in cnnSentTokenized:
-            sent = re.sub("[^a-zA-Z]", " ", sent)
-            cnnWordTokenized = word_tokenize(sent)
-            i = 0
-            while i < len(cnnWordTokenized):
-                if cnnWordTokenized[i] in ["CNN", "highlight"] or \
-                        len(cnnWordTokenized[i]) <= 2 or \
-                        cnnWordTokenized[i] in stopWords:
-                    cnnWordTokenized.remove(cnnWordTokenized[i])
-                else:
-                    cnnWordTokenized[i] = cnnWordTokenized[i].lower()
-                    cnnWordTokenized[i] = lemmatizer.lemmatize(cnnWordTokenized[i])
-                    tokenizedSaveFile.write(cnnWordTokenized[i])
-                    if i < len(cnnWordTokenized) - 1:
-                        tokenizedSaveFile.write(" ")
-                    i += 1
-
-            tokenizedSaveFile.write("\n")
-            cnnPreprocessed.append(cnnWordTokenized)
-
-    tokenizedSaveFile.close()
+    stopwords = ["CNN", "highlight"]
+    cnnPreprocessed = myTokenizer(originalCorpus, tokenizedCorpus, stopwords, 3)
 
     print("Word2Vec Train initiating")
     model = Word2Vec(sentences=cnnPreprocessed, size=100, window=5, min_count=5, workers=4, sg=0)
@@ -63,11 +32,14 @@ except IOError or FileNotFoundError:
     model.save('../data/English/word2vec/cnn_w2v')
     print("Word2Vec file saved")
 
-
 def vectorSubtract(a, b, c):
     result = model.wv.most_similar(positive=[c, b], negative=[a])
     return result[0][0]
 
-mostSimilar = model.wv.most_similar("kid")
+mostSimilar = model.wv.most_similar("obama")
+
 for i in range(0, 6):
     print(mostSimilar[i])
+
+print()
+print(vectorSubtract("korea", "korean", "america"))
