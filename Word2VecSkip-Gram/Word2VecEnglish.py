@@ -36,10 +36,10 @@ def vectorSubtract(a, b, c):
     result = model.wv.most_similar(positive=[c, b], negative=[a])
     return result[0][0]
 
-mostSimilar = model.wv.most_similar("obama")
+mostSimilar = model.wv.most_similar("number")
 
 for i in range(0, 6):
     print(mostSimilar[i])
 
 print()
-print(vectorSubtract("korea", "korean", "america"))
+print(vectorSubtract("big", "bigger", "long"))
