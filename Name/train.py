@@ -4,25 +4,28 @@ import math
 from RNN import RNN
 from utils import *
 import torch.nn as nn
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 all_category, category_lines = get_name_dict()
 
 n_hidden = 128
 n_categories = len(category_lines)
 
+rnn = RNN(n_letters, n_hidden, n_categories)
+criterion = nn.NLLLoss()
+
 def train(n_categories, n_hidden, category_tensor, line_tensor, learning_rate=0.005):
-    rnn = RNN(n_letters, n_hidden, n_categories)
-    criterion = nn.NLLLoss()
-    optimizer = torch.optim.Adam(rnn.parameters(), lr=learning_rate)
+    # optimizer = torch.optim.Adam(rnn.parameters(), lr=learning_rate)
     hidden = rnn.init_hidden()
-    optimizer.zero_grad()
+    rnn.zero_grad()
 
     for i in range(line_tensor.size()[0]):
         output, hidden = rnn(line_tensor[i], hidden)
 
     loss = criterion(output, category_tensor)
     loss.backward()
-    optimizer.step()
+    # optimizer.step()
 
     for p in rnn.parameters():
         p.data.add_(-learning_rate, p.grad.data)
@@ -61,3 +64,6 @@ for iter in range(1, n_iters + 1):
         all_losses.append(current_loss/plot_every)
         current_loss = 0
 
+plt.figure()
+plt.plot(all_losses)
+plt.show()
