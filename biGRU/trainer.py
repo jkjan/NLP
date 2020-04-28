@@ -51,7 +51,7 @@ num_layers = 1
 batch_size = 1
 
 # 학습률
-learning_rate = 0.001
+learning_rate = 0.1
 
 # 사용할 모델
 model = GRU(input_size, hidden_size, output_size, batch_size, device, num_layers).to(device)
@@ -125,8 +125,9 @@ def time_since(since):
 
 
 def print_string(string, j):
+    a = string.argmax(2)
     for k in range(0, seq_len):
-        expected = torch.argmax(string[k][j])
+        expected = a[k]
         sys.stdout.write(idx_to_word[expected.item()] + " ")
 
 
@@ -139,18 +140,20 @@ def train(target, label):
     for i in range(len(target)):
         # GRU 출력
         output, hidden = model(target[i], hidden)
+        (seq, bat, inp) = output.size()
+        output = output.reshape(seq, inp, bat)
 
         # 손실 계산
-        l = criterion(output, label[i].argmax(1)).to(device)
+        l = criterion(output, label[i].argmax(2)).to(device)
         loss += l
 
-        for j in range(0, batch_size):
-            print_string(target[i], j)
-            sys.stdout.write(" -> ")
-            print_string(output, j)     # 생성된 문자열
-            sys.stdout.write(" / ")
-            print_string(label[i], j)
-            sys.stdout.write("\n")
+        # for j in range(0, batch_size):
+        #     print_string(target[i], j)
+        #     sys.stdout.write(" -> ")
+        #     print_string(output.reshape(seq, bat, inp), j)     # 생성된 문자열
+        #     sys.stdout.write(" / ")
+        #     print_string(label[i], j)
+        #     sys.stdout.write("\n")
 
     # 역전파 및 변수 조정
     optimizer.zero_grad()
@@ -177,6 +180,8 @@ for iter in range(1, n_iter + 1):
         output, loss = train(target, label)
         cur_loss += loss
 
+        now_epoch += batch_size
+
     if iter % print_every == 0:
         sys.stdout.write("%d %d%% (%s) %.4f\n\n" % (iter, iter/n_iter*100, time_since(start), loss))
 
@@ -184,7 +189,6 @@ for iter in range(1, n_iter + 1):
         losses.append(cur_loss/plot_every)
         cur_loss = 0
 
-        now_epoch += batch_size
 
 plt.figure()
 plt.plot(losses)
