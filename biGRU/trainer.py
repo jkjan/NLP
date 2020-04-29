@@ -48,7 +48,7 @@ output_size = len(word_to_idx)
 num_layers = 1
 
 # 배치 크기
-batch_size = 1
+batch_size = 10
 
 # 학습률
 learning_rate = 0.1
@@ -108,7 +108,7 @@ def make_batch(docs):
                     one_hot_vector[j][i][word_to_idx[word]] = 1
                     flag = True
                 except IndexError:
-                    return target
+                    break
 
         target.append(one_hot_vector)
         now_word += 1
@@ -125,9 +125,8 @@ def time_since(since):
 
 
 def print_string(string, j):
-    a = string.argmax(2)
     for k in range(0, seq_len):
-        expected = a[k]
+        expected = string[k][j].argmax(0)
         sys.stdout.write(idx_to_word[expected.item()] + " ")
 
 
@@ -154,6 +153,7 @@ def train(target, label):
         #     sys.stdout.write(" / ")
         #     print_string(label[i], j)
         #     sys.stdout.write("\n")
+        # sys.stdout.write("\n")
 
     # 역전파 및 변수 조정
     optimizer.zero_grad()
@@ -166,12 +166,13 @@ def train(target, label):
 losses = []
 cur_loss = 0
 
-print_every = 100
-plot_every = 100
+print_every = n_iter/10
+plot_every = n_iter/10
 start = time.time()
 
 for iter in range(1, n_iter + 1):
     now_epoch = 0
+    sys.stdout.write("iter : " + str(iter) + "\n")
 
     while now_epoch + batch_size <= len(data):
         target = make_batch(data[now_epoch:now_epoch+batch_size])
@@ -182,13 +183,16 @@ for iter in range(1, n_iter + 1):
 
         now_epoch += batch_size
 
+    sys.stdout.write("loss : " + str(loss) + "\n")
+
     if iter % print_every == 0:
-        sys.stdout.write("%d %d%% (%s) %.4f\n\n" % (iter, iter/n_iter*100, time_since(start), loss))
+        sys.stdout.write("%d %d%% (%s) %.4f\n" % (iter, iter/n_iter*100, time_since(start), loss))
 
     if iter % plot_every == 0:
         losses.append(cur_loss/plot_every)
         cur_loss = 0
 
+    sys.stdout.write("\n")
 
 plt.figure()
 plt.plot(losses)
