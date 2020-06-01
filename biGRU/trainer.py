@@ -1,32 +1,32 @@
 import sys
 import matplotlib.pyplot as plt
-from utils import make_batch, time_since, train
+from utils import random_training_example, time_since, train, lyric_to_tensor, target_to_tensor
 from hyperparameters import *
+import time
 
+# a list of losses
+losses = []
 
-for iter in range(1, n_iter + 1):
-    now_epoch = 0
-    sys.stdout.write("iter : " + str(iter) + "\n")
+# current loss
+loss = 0
 
-    while now_epoch + batch_size <= len(data):
-        target = make_batch(data[now_epoch:now_epoch+batch_size])
-        label = target[1:] + [torch.cat((target[-1][1:seq_len], torch.zeros(1, batch_size, input_size).to(device)), 0)]
+# sum of losses for an epoch
+total_loss = 0
 
-        output, loss = train(target, label)
-        cur_loss += loss
+# now!
+start = time.time()
 
-        now_epoch += batch_size
+for i in range(1, n_iter + 1):
+    output, loss = train(*random_training_example())
+    total_loss += loss
 
-    sys.stdout.write("loss : " + str(loss) + "\n")
+    if i % print_every == 0:
+        sys.stdout.write("%d %d%% (%s) %.4f\n" % (i, i / n_iter * 100, time_since(start), loss))
 
-    if iter % print_every == 0:
-        sys.stdout.write("%d %d%% (%s) %.4f\n" % (iter, iter/n_iter*100, time_since(start), loss))
+    if i % plot_every == 0:
+        losses.append(total_loss/plot_every)
+        total_loss = 0
 
-    if iter % plot_every == 0:
-        losses.append(cur_loss/plot_every)
-        cur_loss = 0
-
-    sys.stdout.write("\n")
 
 plt.figure()
 plt.plot(losses)

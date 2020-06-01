@@ -2,29 +2,14 @@ import time
 import sys
 import math
 from hyperparameters import *
-
-def encode_word(word):
-    """
-    :param word: 단어
-    :return: 원-핫 인코딩된 단어, size = (1, 입력 크기)
-    """
-    one_hot_vector = torch.zeros(1, input_size)
-    one_hot_vector[word_to_idx[word]] = 1
-    return one_hot_vector.to(device)
-
-
-def encode_doc(doc):
-    """
-    :param doc: 문장
-    :return: 원-핫 인코딩된 문장, size = (문장의 길이, 1, 입력 크기)
-    """
-    one_hot_vector = torch.zeros(len(doc), 1, input_size)
-    for i, word in enumerate(doc):
-        one_hot_vector[i][0][word_to_idx[word]] = 1
-    return one_hot_vector.to(device)
+import random
 
 
 def lyric_to_tensor(lyric):
+    """
+    :param lyric: a piece of lyric in data
+    :return: one-hot encoded tensor of the lyric
+    """
     tensor = torch.zeros(len(lyric), 1, input_size).to(device)
     for i in range(len(lyric)):
         word = lyric[i]
@@ -33,42 +18,45 @@ def lyric_to_tensor(lyric):
 
 
 def target_to_tensor(lyric):
+    """
+    :param lyric: a piece of lyric in data
+    :return: indices of words in lyric
+    """
     target_indices = [word_to_idx[lyric[i]] for i in range(1, len(lyric))]
-    target_indices.append(input_size - 1)
+    target_indices.append(input_size - 1) # EOS
     return torch.LongTensor(target_indices).to(device)
 
 
-def train(target, label):
-    # 은닉층 초기화
-    hidden = model.init_hidden(device)
-    optimizer.zero_grad()
+def random_training_example():
+    """
+    :return: random pair of lyric
+    """
+    rand_lyric = data[random.randint(0, len(data) - 1)]
+    return lyric_to_tensor(rand_lyric), target_to_tensor(rand_lyric)
+
+
+def train(lyrics, target):
+    target.unsqueeze_(-1)
+    hidden = model.init_hidden()
+    model.zero_grad()
     loss = 0
 
-    for i in range(len(target)):
+    for i in range(lyrics.size(0)):
+        input = lyrics[i].reshape((1, 1, input_size))
         # GRU 출력
-        output, hidden = model(target[i], hidden)
-        (seq, bat, inp) = output.size()
-        output = output.reshape(seq, inp, bat)
+        output, hidden = model(input, hidden)
 
         # 손실 계산
-        l = criterion(output, label[i].argmax(2)).to(device)
+        l = criterion(output, target[i]).to(device)
         loss += l
 
-        # for j in range(0, batch_size):
-        #     print_string(target[i], j)
-        #     sys.stdout.write(" -> ")
-        #     print_string(output.reshape(seq, bat, inp), j)     # 생성된 문자열
-        #     sys.stdout.write(" / ")
-        #     print_string(label[i], j)
-        #     sys.stdout.write("\n")
-        # sys.stdout.write("\n")
-
-    # 역전파 및 변수 조정
-    optimizer.zero_grad()
+    # backpropagation
     loss.backward()
-    optimizer.step()
 
-    return output, loss.item()
+    for p in model.parameters():
+        p.data.add_(-learning_rate, p.grad.data)
+
+    return output, loss.item() / lyrics.size(0)
 
 
 def make_batch(docs):

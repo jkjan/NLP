@@ -2,76 +2,9 @@ from data_loader import load_data
 import torch
 import torch.nn as nn
 from GRU import GRU
-from time import time
-
-# 시 품사 태깅 경로
-data_path = "./data/pos_tagged.pkl"
-
-# 시 딕셔너리 경로
-dictionary_path = "./data/word_to_idx.pkl"
-
-# 단어 - 인덱스
-word_to_idx = load_data(dictionary_path)
-
-# 데이터
-data = load_data(data_path)
-
-# 단어를 인덱스로 매핑해주는 딕셔너리
-idx_to_word = {v: k for k, v in word_to_idx.items()}
-
-# 입력 사이즈, 즉 나올 수 있는 단어 가지의 수
-input_size = len(word_to_idx)
-
-# 은닉층 수
-hidden_size = 512
-
-# 출력 사이즈
-output_size = len(word_to_idx)
-
-# 레이어의 수
-num_layers = 1
-
-# 배치 크기
-batch_size = 10
-
-# 학습률
-learning_rate = 0.1
-
-# 사용할 모델
-model = GRU(input_size, hidden_size, output_size, batch_size, num_layers)
-
-# 손실 함수의 기준
-criterion = nn.CrossEntropyLoss()
-
-# 최적화
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-# 반복 횟수
-n_iter = 1000
-
-# 현재 문장 위치
-now_epoch = 0
-
-# 생성할 단어 수, 한 번에 학습할 단어 수
-seq_len = 5
 
 
-# 현재 시각
-start = time()
-
-# 손실 값 리스트
-losses = []
-
-# 현재 손실 값
-cur_loss = 0
-
-# 출력 빈도
-print_every = n_iter/10
-
-# 플롯 빈도
-plot_every = n_iter/10
-
-# 학습 준비
+# decide which device will be used
 if torch.cuda.is_available():
     device = torch.device("cuda")
     print("cuda is available!")
@@ -84,3 +17,60 @@ if torch.cuda.is_available():
 
 else:
     device = torch.device("cpu")
+
+# a path to tokenized and pos tagged data of 100 korean lyrics
+data_path = "./data/pos_tagged.pkl"
+
+# a path to dictionary data of 100 korean lyrics, which maps a word to a corresponding index
+dictionary_path = "./data/word_to_idx.pkl"
+
+# a dictionary that maps a word to a corresponding index
+word_to_idx = load_data(dictionary_path)
+
+# data of lyrics
+data = load_data(data_path)
+
+# a dictionary that maps an index to a corresponding word
+idx_to_word = {v: k for k, v in word_to_idx.items()}
+
+# the number of unique words
+input_size = len(word_to_idx)
+
+# the number of hidden layers
+hidden_size = 512
+
+# a size of output tensor
+output_size = len(word_to_idx)
+
+# the number of layers
+num_layers = 1
+
+# a size of batch
+batch_size = 1
+
+# learning rate
+learning_rate = 0.01
+
+# a deep learning model to use
+model = GRU(input_size, hidden_size, output_size, batch_size, device, num_layers)
+
+# loss function
+criterion = nn.CrossEntropyLoss()
+
+# optimizer with backpropagation
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+# the number of iteration
+n_iter = 1000
+
+# a current epoch
+now_epoch = 0
+
+# the number of words to generate or train
+seq_len = 5
+
+# print frequency
+print_every = n_iter/10
+
+# plot frequency
+plot_every = n_iter/10
