@@ -1,7 +1,7 @@
-import torch
-from trainer import input_size, word_to_idx, batch_size, seq_len, device
 import time
+import sys
 import math
+from hyperparameters import *
 
 def encode_word(word):
     """
@@ -22,6 +22,53 @@ def encode_doc(doc):
     for i, word in enumerate(doc):
         one_hot_vector[i][0][word_to_idx[word]] = 1
     return one_hot_vector.to(device)
+
+
+def lyric_to_tensor(lyric):
+    tensor = torch.zeros(len(lyric), 1, input_size).to(device)
+    for i in range(len(lyric)):
+        word = lyric[i]
+        tensor[i][0][word_to_idx[word]] = 1
+    return tensor
+
+
+def target_to_tensor(lyric):
+    target_indices = [word_to_idx[lyric[i]] for i in range(1, len(lyric))]
+    target_indices.append(input_size - 1)
+    return torch.LongTensor(target_indices).to(device)
+
+
+def train(target, label):
+    # 은닉층 초기화
+    hidden = model.init_hidden(device)
+    optimizer.zero_grad()
+    loss = 0
+
+    for i in range(len(target)):
+        # GRU 출력
+        output, hidden = model(target[i], hidden)
+        (seq, bat, inp) = output.size()
+        output = output.reshape(seq, inp, bat)
+
+        # 손실 계산
+        l = criterion(output, label[i].argmax(2)).to(device)
+        loss += l
+
+        # for j in range(0, batch_size):
+        #     print_string(target[i], j)
+        #     sys.stdout.write(" -> ")
+        #     print_string(output.reshape(seq, bat, inp), j)     # 생성된 문자열
+        #     sys.stdout.write(" / ")
+        #     print_string(label[i], j)
+        #     sys.stdout.write("\n")
+        # sys.stdout.write("\n")
+
+    # 역전파 및 변수 조정
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    return output, loss.item()
 
 
 def make_batch(docs):
@@ -57,3 +104,9 @@ def time_since(since):
     m = math.floor(s / 60)
     s -= m * 60
     return "%dm %ds" % (m, s)
+
+
+def print_string(string, j):
+    for k in range(0, seq_len):
+        expected = string[k][j].argmax(0)
+        sys.stdout.write(idx_to_word[expected.item()] + " ")

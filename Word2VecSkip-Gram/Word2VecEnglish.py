@@ -42,4 +42,4 @@ for i in range(0, 6):
     print(mostSimilar[i])
 
 print()
-print(vectorSubtract("big", "bigger", "long"))
+print(vectorSubtract("big", "bigger", "pretty"))
