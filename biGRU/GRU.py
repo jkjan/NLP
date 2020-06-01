@@ -7,14 +7,14 @@ class GRU(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.batch_size = batch_size
-        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=False)
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=False, dropout=0.2)
         self.fc = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
 
 
     def forward(self, x, h):
         out, h = self.gru(x, h)
-        out = self.relu(out)
+        out = self.relu(out[:, -1])
         out = self.fc(out)
         return out, h
 
