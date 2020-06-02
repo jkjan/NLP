@@ -49,7 +49,7 @@ num_layers = 1
 batch_size = 1
 
 # learning rate
-learning_rate = 0.01
+learning_rate = 0.001
 
 # a deep learning model to use
 model = GRU(input_size, hidden_size, output_size, batch_size, device, num_layers)
@@ -61,7 +61,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 # the number of iteration
-n_iter = 1000
+n_iter = 100000
 
 # a current epoch
 now_epoch = 0
@@ -70,7 +70,7 @@ now_epoch = 0
 seq_len = 5
 
 # print frequency
-print_every = n_iter/10
+print_every = 5000
 
 # plot frequency
-plot_every = n_iter/10
+plot_every = 500

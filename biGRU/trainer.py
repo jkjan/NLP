@@ -1,35 +1,52 @@
 import sys
 import matplotlib.pyplot as plt
-from utils import random_training_example, time_since, train, lyric_to_tensor, target_to_tensor
-from hyperparameters import *
+import common as cm
 import time
+import torch
 
-# a list of losses
-losses = []
+is_train = True
 
-# current loss
-loss = 0
+if is_train:
+    from hyperparameters import *
 
-# sum of losses for an epoch
-total_loss = 0
+    # a list of losses
+    losses = []
 
-# now!
-start = time.time()
+    # current loss
+    loss = 0
 
-for i in range(1, n_iter + 1):
-    output, loss = train(*random_training_example())
-    total_loss += loss
+    # sum of losses for an epoch
+    total_loss = 0
 
-    if i % print_every == 0:
-        sys.stdout.write("%d %d%% (%s) %.4f\n" % (i, i / n_iter * 100, time_since(start), loss))
+    # now!
+    start = time.time()
 
-    if i % plot_every == 0:
-        losses.append(total_loss/plot_every)
-        total_loss = 0
+    print()
+    print("----------------")
+    print("training starts!")
+    print("----------------")
+    print()
 
+    for i in range(1, n_iter + 1):
+        output, loss = cm.train(*cm.random_training_example())
+        total_loss += loss
 
-plt.figure()
-plt.plot(losses)
-plt.show()
+        if i % print_every == 0:
+            sys.stdout.write("%d %d%% (%s) %.4f\n" % (i, i / n_iter * 100, cm.time_since(start), loss))
 
-torch.save(model, "gru.pt")
+        if i % plot_every == 0:
+            losses.append(total_loss / plot_every)
+            total_loss = 0
+
+    plt.figure()
+    plt.plot(losses)
+    plt.show()
+
+    torch.save(model, "gru.pt")
+
+else:
+    model = torch.load("gru.pt")
+
+output_lyrics = cm.generate(["너"])
+
+print(output_lyrics)
