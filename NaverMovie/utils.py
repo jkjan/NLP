@@ -58,7 +58,7 @@ def train(input, target):
 
     loss.backward()
     optimizer.step()
-    scheduler.step()
+    # scheduler.step()
 
     return output, loss.item()
 
@@ -95,4 +95,10 @@ def accuracy_test():
             if answer:
                 correct += 1
 
-    return correct/total
+    return correct/total * 100
+
+
+def training_example(i):
+    if len(tokenized_train[i]) == 0:
+        raise Exception
+    return doc_to_tensor(tokenized_train[i]), target_to_tensor(train_data.iloc[i]['label'])

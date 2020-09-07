@@ -7,8 +7,8 @@ class GRU(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.batch_size = batch_size
-        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=False, dropout=0.2)
-        self.fc = nn.Linear(hidden_size, output_size)
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=False, bidirectional=True, dropout=0.2)
+        self.fc = nn.Linear(hidden_size*2, output_size)
         self.relu = nn.ReLU()
         self.device = device
         self.to(device)
@@ -22,5 +22,5 @@ class GRU(nn.Module):
 
 
     def init_hidden(self):
-        hidden = torch.zeros(self.num_layers, self.batch_size, self.hidden_size).to(self.device)
+        hidden = torch.zeros(self.num_layers*2, self.batch_size, self.hidden_size).to(self.device)
         return hidden

@@ -32,13 +32,16 @@ test_data, tokenized_test = tokenize(path_to_data + test_file,
                                      stopwords,
                                      path_to_tokenized + tokenized_test_file)
 
+test_data = test_data[:200]
+tokenized_test = tokenized_test[:200]
+
 w2v = get_word_embedding(tokenized_train + tokenized_test, path_to_w2v + w2v_file)
 
 # a size of batch
 batch_size = 1
 
 # learning rate
-learning_rate = 0.1
+learning_rate = 0.001
 
 
 if torch.cuda.is_available():
@@ -65,7 +68,7 @@ hidden_size = 512
 output_size = 2
 
 # the number of layers
-num_layers = 1
+num_layers = 2
 
 # a deep learning model to use
 model = GRU(input_size, hidden_size, output_size, batch_size, device, num_layers)
@@ -77,16 +80,16 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 # learning rate scheduler
-scheduler = StepLR(optimizer, step_size=3000, gamma=0.1)
+scheduler = StepLR(optimizer, step_size=300, gamma=0.1)
 
 # print frequency
-print_every = 5000
+print_every = 50
 
 # plot frequency
-plot_every = 500
+plot_every = 50
 
 # the number of iteration
-n_iter = 100000
+n_iter = 1000
 
 # a current epoch
 now_epoch = 0
